@@ -7,6 +7,7 @@
  * @typedef {Object} SerialAdventure
  * @property {SerialStat[]} player
  * @property {SerialStat[]} enemy_template
+ * @property {SerialStat[][]} enemies
  */
 
 /**
@@ -39,6 +40,20 @@ export class Adventure {
             stat._val = serial.enemy_template[i].val;
             stat._max = serial.enemy_template[i].max;
         }
+
+        for (let j = 0; j < serial.enemies.length; j++) {
+            const enemy = [];
+            for (let i = 0; i < serial.enemies[j].length; i++) {
+                const stat = new Stat(new_adventure);
+                stat._name = serial.enemies[j][i].name;
+                stat._color = serial.enemies[j][i].color;
+                stat._val = serial.enemies[j][i].val;
+                stat._max = serial.enemies[j][i].max;
+                enemy.push(stat);
+            }
+            new_adventure.enemies.push(enemy);
+        }
+
         new_adventure._owner = owner;
         return new_adventure;
     }
@@ -144,12 +159,39 @@ export class Adventure {
      * @returns {Stat[]}
      */
     add_enemy() {
-        const new_enemy = structuredClone(this.enemy_template);
-        new_enemy.forEach((stat) => {
-            stat._key = next_stat_key();
+        const new_enemy = this.enemy_template.map((stat) => {
+            const new_stat = new Stat(stat._owner);
+            new_stat._name = stat._name;
+            new_stat._color = stat._color;
+            return new_stat;
         });
         this.enemies.push(new_enemy);
+        this._owner.adventure_change();
         return new_enemy;
+    }
+
+    /**
+     * @param {number} index
+     */
+    remove_enemy(index) {
+        if (index < this.enemies.length) {
+            this.enemies.splice(index, 1);
+            this._owner.adventure_change();
+        }
+    }
+
+    /**
+     * @param {number} key
+     * @returns {?Stat}
+     **/
+    find_stat_in_enemies(key) {
+        for (let i = 0; i < this.enemies.length; i++) {
+            const stat = this._get_stat(this.enemies[i], key);
+            if (stat !== null) {
+                return stat;
+            }
+        }
+        return null;
     }
 
     adventure_change() {
@@ -207,6 +249,8 @@ export class Stat {
         this._val = newval;
         if (this._val > this._max) {
             this._max = this._val;
+        } else if (this._val === 0) {
+            this._max = 0;
         }
         this._owner.adventure_change();
     }

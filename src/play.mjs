@@ -1,5 +1,7 @@
 import $ from "jquery"
 
+import { get_stat_elements_from_event } from "./setup.mjs";
+
 /**
  * @typedef {import("./index.mjs").App} App
  */
@@ -14,6 +16,11 @@ export class PlayPage {
 
     /** @type {JQuery<HTMLDivElement>} */
     player_stats_list;
+    /** @type {JQuery<HTMLDivElement>} */
+    enemies_list;
+    /** @type {JQuery<HTMLButtonElement>} */
+    add_enemy_btn;
+
 
     /**
      * @param {App} app 
@@ -24,6 +31,10 @@ export class PlayPage {
         this.nav = $("#nav-play");
 
         this.player_stats_list = $('#play-player-attributes');
+        this.enemies_list = $("#enemies");
+        this.add_enemy_btn = $("#play-enemy-add");
+
+        this.add_enemy_btn.on("click", this.add_enemy.bind(this));
     }
 
     open() {
@@ -33,6 +44,7 @@ export class PlayPage {
         this.nav.addClass("active");
 
         this.build_player_stats();
+        this.build_enemy_stats();
     }
 
     close() {
@@ -92,30 +104,109 @@ export class PlayPage {
     }
 
     reduce_player_stat(event) {
-        const stat_row = $(event.delegateTarget).parent();
-        const stat_key = parseInt(stat_row.data("stat_key"));
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
-        if (stat.val > 0) {
+        if (stat !== null && stat.val > 0) {
             stat.val = stat.val - 1;
             stat_row.find("input").val(stat.val.toString());
         }
     }
 
     change_player_stat(event) {
-        const target = $(event.delegateTarget)
-        const stat_row = target.parent();
-        const stat_key = parseInt(stat_row.data("stat_key"));
+        const { target, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
-
-        const new_val = parseInt(target.val());
-        stat.val = new_val;
+        if (stat !== null) {
+            const new_val = parseInt(target.val());
+            stat.val = new_val;
+        }
     }
 
     increase_player_stat(event) {
-        const stat_row = $(event.delegateTarget).parent();
-        const stat_key = parseInt(stat_row.data("stat_key"));
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
-        if (stat.val < Number.MAX_SAFE_INTEGER) {
+        if (stat !== null && stat.val < Number.MAX_SAFE_INTEGER) {
+            stat.val = stat.val + 1;
+            stat_row.find("input").val(stat.val.toString());
+        }
+    }
+
+    /**
+     * 
+     * @param {Stat[]} [new_enemy]
+     */
+    add_enemy(new_enemy) {
+        if (typeof (new_enemy) === "undefined" || !Array.isArray(new_enemy)) {
+            new_enemy = this._app.adventure.add_enemy();
+        }
+        const enemy_card_body = $("<div />").addClass("card-body");
+
+        for (const stat of new_enemy) {
+            this.create_stat_row(
+                enemy_card_body, stat.key,
+                this.reduce_enemy_stat.bind(this),
+                stat.name, stat.val,
+                this.change_enemy_stat.bind(this),
+                this.increase_enemy_stat.bind(this)
+            );
+        }
+
+        enemy_card_body.append($("<div />")
+            .addClass("d-grid")
+            .append($("<button />")
+                .attr("type", "button").text("Remove enemy")
+                .addClass("btn").addClass("btn-outline-danger")
+                .on("click", this.remove_enemy.bind(this))))
+
+        const enemy_card = $("<div />")
+            .addClass("card").addClass("mt-2")
+            .addClass("shadow").append(enemy_card_body);
+        this.enemies_list.append(enemy_card);
+    }
+
+    build_enemy_stats() {
+        this.enemies_list.html('');
+        for (const enemy of this._app.adventure.enemies) {
+            this.add_enemy(enemy);
+        }
+    }
+
+    /**
+     * 
+     * @param {JQuery.ClickEvent} event 
+     */
+    remove_enemy(event) {
+        const target = $(event.delegateTarget);
+        const card = target.parents(".card.shadow");
+        const index = this.enemies_list.find(".card").index(card);
+        console.log(card, index)
+        if (index >= 0) {
+            this._app.adventure.remove_enemy(index);
+            card.remove();
+        }
+    }
+
+    reduce_enemy_stat(event) {
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
+        const stat = this._app.adventure.find_stat_in_enemies(stat_key);
+        if (stat !== null && stat.val > 0) {
+            stat.val = stat.val - 1;
+            stat_row.find("input").val(stat.val.toString());
+        }
+    }
+
+    change_enemy_stat(event) {
+        const { target, stat_key } = get_stat_elements_from_event(event);
+        const stat = this._app.adventure.find_stat_in_enemies(stat_key);
+        if (stat !== null) {
+            const new_val = parseInt(target.val());
+            stat.val = new_val;
+        }
+    }
+
+    increase_enemy_stat(event) {
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
+        const stat = this._app.adventure.find_stat_in_enemies(stat_key);
+        if (stat !== null && stat.val < Number.MAX_SAFE_INTEGER) {
             stat.val = stat.val + 1;
             stat_row.find("input").val(stat.val.toString());
         }

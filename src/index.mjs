@@ -1,4 +1,4 @@
-// import { Peer } from "peerjs"
+import { Peer } from "peerjs"
 // import $ from "jquery"
 
 import { Adventure } from "./adventure.mjs";
@@ -20,7 +20,8 @@ function defer_saving(adventure) {
         /** @type {import("./adventure.mjs").SerialAdventure} */
         const adventure_serial = {
             player: adventure.player.map(stat_map_cb),
-            enemy_template: adventure.enemy_template.map(stat_map_cb)
+            enemy_template: adventure.enemy_template.map(stat_map_cb),
+            enemies: adventure.enemies.map((enemy) => enemy.map(stat_map_cb))
         };
         window.localStorage.setItem("adventure", JSON.stringify(adventure_serial));
     }, 200);
@@ -68,6 +69,16 @@ export class App {
 
     adventure_change() {
         defer_saving(this.adventure);
+    }
+
+    /**
+     * 
+     * @param {import("peerjs").DataConnection} conn
+     */
+    new_connect(conn) {
+        conn.on("data", (data) => {
+            console.log(data);
+        });
     }
 
 }

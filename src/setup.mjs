@@ -4,6 +4,17 @@ import $ from "jquery"
  * @typedef {import("./index.mjs").App} App
  */
 
+/**
+ * @param {JQuery.ClickEvent|JQuery.ChangeEvent} event 
+ * @returns {{ target: jQuery<HTMLInputElement|HTMLButtonElement>, stat_row: jQuery<HTMLDivElement>, stat_key: number }}
+ */
+export function get_stat_elements_from_event(event) {
+    const target = $(event.delegateTarget);
+    const stat_row = target.parent();
+    const stat_key = parseInt(stat_row.data("stat_key"));
+    return { target, stat_row, stat_key };
+}
+
 export class SetupPage {
     /** @type {App} */
     _app;
@@ -135,24 +146,21 @@ export class SetupPage {
      * @param {JQuery.ClickEvent} event 
      */
     remove_player_stat(event) {
-        const stat_row = $(event.delegateTarget).parent();
-        const stat_key = parseInt(stat_row.data("stat_key"));
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
         stat_row.remove();
         this._app.adventure.remove_player_stat(stat_key);
     }
 
     /** @param {JQuery.Event} */
     player_stat_name_change(event) {
-        const input = $(event.delegateTarget);
-        const stat_key = parseInt(input.parent().data("stat_key"));
-        this._app.adventure.get_player_stat(stat_key).name = input.val();
+        const { target, stat_key } = get_stat_elements_from_event(event);
+        this._app.adventure.get_player_stat(stat_key).name = target.val();
     }
 
     /** @param {JQuery.Event} */
     player_stat_color_change(event) {
-        const input = $(event.delegateTarget);
-        const stat_key = parseInt(input.parent().data("stat_key"));
-        this._app.adventure.get_player_stat(stat_key).color = input.val();
+        const { target, stat_key } = get_stat_elements_from_event(event);
+        this._app.adventure.get_player_stat(stat_key).color = target.val();
     }
 
 
@@ -161,24 +169,21 @@ export class SetupPage {
      * @param {JQuery.ClickEvent} event 
      */
     remove_enemy_stat(event) {
-        const stat_row = $(event.delegateTarget).parent();
-        const stat_key = parseInt(stat_row.data("stat_key"));
+        const { stat_row, stat_key } = get_stat_elements_from_event(event);
         stat_row.remove();
         this._app.adventure.remove_enemy_stat(stat_key);
     }
 
     /** @param {JQuery.Event} */
     enemy_stat_name_change(event) {
-        const input = $(event.delegateTarget);
-        const stat_key = parseInt(input.parent().data("stat_key"));
-        this._app.adventure.get_enemy_stat(stat_key).name = input.val();
+        const { target, stat_key } = get_stat_elements_from_event(event);
+        this._app.adventure.get_enemy_stat(stat_key).name = target.val();
     }
 
     /** @param {JQuery.Event} */
     enemy_stat_color_change(event) {
-        const input = $(event.delegateTarget);
-        const stat_key = parseInt(input.parent().data("stat_key"));
-        this._app.adventure.get_enemy_stat(stat_key).color = input.val();
+        const { target, stat_key } = get_stat_elements_from_event(event);
+        this._app.adventure.get_enemy_stat(stat_key).color = target.val();
     }
 
 }
