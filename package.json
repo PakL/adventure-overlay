@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "main": "src/index.mjs",
   "scripts": {
-    "build": "npx webpack --mode=production --entry ./src/index.mjs --output-path ./dist",
-    "watch": "npx webpack watch --mode=development --entry ./src/index.mjs --output-path ./dist"
+    "build": "npx webpack --mode=production",
+    "watch": "npx webpack watch --mode=development"
   },
   "keywords": [],
   "author": "PakL <pakl@pakl.dev> (https://pakl.dev/)",

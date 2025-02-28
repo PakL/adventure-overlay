@@ -1,5 +1,5 @@
 import { Peer } from "peerjs"
-// import $ from "jquery"
+import $ from "jquery"
 
 import { Adventure } from "./adventure.mjs";
 import { PlayPage } from "./play.mjs";
@@ -10,20 +10,15 @@ let saving_timeout = null;
 /**
  * @param {Adventure} adventure 
  */
-function defer_saving(adventure) {
+function defer_saving(adventure, broadcast_cb) {
     if (saving_timeout !== null) {
         clearTimeout(saving_timeout);
     }
     saving_timeout = setTimeout(function () {
         saving_timeout = null;
-        const stat_map_cb = (s) => { return { name: s._name, color: s._color, val: s._val, max: s._max }; };
-        /** @type {import("./adventure.mjs").SerialAdventure} */
-        const adventure_serial = {
-            player: adventure.player.map(stat_map_cb),
-            enemy_template: adventure.enemy_template.map(stat_map_cb),
-            enemies: adventure.enemies.map((enemy) => enemy.map(stat_map_cb))
-        };
-        window.localStorage.setItem("adventure", JSON.stringify(adventure_serial));
+        const adventure_json = adventure.to_json();
+        window.localStorage.setItem("adventure", adventure_json);
+        broadcast_cb(adventure_json);
     }, 200);
 }
 
@@ -37,7 +32,18 @@ export class App {
     /** @type {Adventure} */
     adventure;
 
+    /** @type {JQuery<HTMLDivElement>} */
+    connection_status;
+
+    /** @type {Map<string, import("peerjs").DataConnection>} */
+    connection_map;
+
+    /** @type {Peer} */
+    peer;
+
     constructor() {
+        this.connection_status = $("#connection_status");
+
         this.load_adventure();
         this.play = new PlayPage(this);
         this.setup = new SetupPage(this);
@@ -46,6 +52,10 @@ export class App {
         this.setup.nav.on("click", this.open_setup_page.bind(this));
 
         this.play.open();
+
+
+        this.connection_map = new Map();
+        this.connect_to_peer();
     }
 
     load_adventure() {
@@ -68,17 +78,58 @@ export class App {
     }
 
     adventure_change() {
-        defer_saving(this.adventure);
+        defer_saving(this.adventure, this.broadcast_to_peers.bind(this));
+    }
+
+    connect_to_peer() {
+        let connection_uuid = localStorage.getItem("connection_uuid");
+        if (connection_uuid === null) {
+            connection_uuid = crypto.randomUUID();
+            localStorage.setItem("connection_uuid", connection_uuid);
+        }
+
+        this.peer = new Peer("pakl-dev-" + connection_uuid, { host: "localhost", port: 9000 });
+        this.peer.on("open", this.on_peer_open.bind(this));
+        this.peer.on("error", this.on_peer_error.bind(this));
+        this.peer.on("connection", this.on_new_peer_connection.bind(this));
+    }
+
+    broadcast_to_peers(json_adventure) {
+        this.connection_map.forEach((conn) => {
+            conn.send(json_adventure);
+        });
     }
 
     /**
-     * 
+     * @param {string} _id 
+     */
+    on_peer_open(_id) {
+        //TODO: check if it's mine or if the server gave me a different one
+        this.connection_status.text("Connection open. Waiting for clients");
+    }
+
+    on_peer_error() {
+        this.peer.removeAllListeners();
+        setTimeout(this.connect_to_peer.bind(this), 3000);
+    }
+
+    /**
      * @param {import("peerjs").DataConnection} conn
      */
-    new_connect(conn) {
+    on_new_peer_connection(conn) {
         conn.on("data", (data) => {
-            console.log(data);
+            if (data === "Hello server!") {
+                console.log("New connection");
+                this.connection_map.set(conn.connectionId, conn);
+                this.connection_status.text(this.connection_map.size + " clients connected");
+                conn.send(this.adventure.to_jobject_w_keys());
+            }
         });
+        conn.on("close", (() => {
+            this.connection_map.delete(conn.connectionId);
+            console.log("Connection lost");
+            this.connection_status.text(this.connection_map.size + " clients connected");
+        }).bind(this));
     }
 
 }

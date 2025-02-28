@@ -9,6 +9,12 @@
  * @property {SerialStat[]} enemy_template
  * @property {SerialStat[][]} enemies
  */
+/**
+ * @typedef {Object} SerialAdventureWKeys
+ * @property {SerialStatWKey[]} player
+ * @property {SerialStatWKey[]} enemy_template
+ * @property {SerialStatWKey[][]} enemies
+ */
 
 /**
  * @typedef {Object} SerialStat
@@ -17,6 +23,21 @@
  * @property {number} val
  * @property {number} max
  */
+
+/**
+ * @typedef {Object} SerialStatWKey
+ * @property {number} key
+ * @property {string} name
+ * @property {string} color
+ * @property {number} val
+ * @property {number} max
+ */
+
+
+/** @type {(s: Stat) => SerialStat} */
+const stat_map_cb = (s) => { return { name: s._name, color: s._color, val: s._val, max: s._max }; };
+/** @type {(s: Stat) => SerialStatWKey} */
+const stat_map_w_keys_cb = (s) => { return { key: s._key, name: s._name, color: s._color, val: s._val, max: s._max }; };
 
 export class Adventure {
     /**
@@ -196,6 +217,29 @@ export class Adventure {
 
     adventure_change() {
         this._owner.adventure_change();
+    }
+
+    /** @returns {SerialAdventureWKeys} */
+    to_jobject_w_keys() {
+        return {
+            player: this.player.map(stat_map_w_keys_cb),
+            enemy_template: this.enemy_template.map(stat_map_w_keys_cb),
+            enemies: this.enemies.map((enemy) => enemy.map(stat_map_w_keys_cb))
+        };
+    }
+
+    /** @returns {SerialAdventure} */
+    to_jobject() {
+        return {
+            player: this.player.map(stat_map_cb),
+            enemy_template: this.enemy_template.map(stat_map_cb),
+            enemies: this.enemies.map((enemy) => enemy.map(stat_map_cb))
+        };
+    }
+
+    /** @returns {string} */
+    to_json() {
+        JSON.stringify(this.to_jobject());
     }
 }
 
