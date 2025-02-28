@@ -11,10 +11,14 @@ class Receiver {
     /** @type {import("peerjs").DataConnection} */
     connection = null;
 
+    /** @type {JQuery<HTMLDivElement>} */
+    player_stats;
 
     constructor() {
         this._adventure = Adventure.from(this, { player: [], enemies: [], enemy_template: [] });
         this.connect_to_peer();
+
+        this.player_stats = $("#player");
 
         window.addEventListener("beforeunload", this.on_before_unload.bind(this));
     }
@@ -62,7 +66,45 @@ class Receiver {
      * @param {string} data 
      */
     on_peer_data(data) {
-        console.log(data);
+        for (const update of this._adventure.compare(data)) {
+            switch (update.action) {
+                case "add": this.process_add(update); break;
+                case "update": this.process_update(update); break;
+            }
+        }
+    }
+
+    /**
+     * @param {import("./adventure.mjs").AdventureUpdate} update 
+     */
+    process_add(update) {
+        switch (update.kind) {
+            case "player":
+                this.player_stats.append(
+                    $("<div />").addClass("stat").attr("id", "player-stat-" + update.new_state.key).text(update.new_state.name)
+                        .css("--background-color", update.new_state.color)
+                        .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
+                        .append($("<div />").addClass("shadow"))
+                );
+                break;
+            case "enemy": break;
+            case "item": break;
+        }
+    }
+
+    /**
+     * @param {import("./adventure.mjs").AdventureUpdate} update 
+     */
+    process_update(update) {
+        switch (update.kind) {
+            case "player":
+                $("#player-stat-" + update.new_state.key)
+                    .css("--background-color", update.new_state.color)
+                    .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
+                break;
+            case "enemy": break;
+            case "item": break;
+        }
     }
 
     adventure_change() {

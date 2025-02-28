@@ -18,7 +18,7 @@ function defer_saving(adventure, broadcast_cb) {
         saving_timeout = null;
         const adventure_json = adventure.to_json();
         window.localStorage.setItem("adventure", adventure_json);
-        broadcast_cb(adventure_json);
+        broadcast_cb();
     }, 200);
 }
 
@@ -94,9 +94,10 @@ export class App {
         this.peer.on("connection", this.on_new_peer_connection.bind(this));
     }
 
-    broadcast_to_peers(json_adventure) {
+    broadcast_to_peers() {
+        const adventure_object = this.adventure.to_jobject_w_keys();
         this.connection_map.forEach((conn) => {
-            conn.send(json_adventure);
+            conn.send(adventure_object);
         });
     }
 

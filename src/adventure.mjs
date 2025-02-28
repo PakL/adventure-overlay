@@ -33,6 +33,14 @@
  * @property {number} max
  */
 
+/**
+ * @typedef {Object} AdventureUpdate
+ * @property {"add"|"update"|"remove"} action
+ * @property {"player"|"enemy"|"item"} kind
+ * @property {string} key
+ * @property {SerialStatWKey} new_state
+ */
+
 
 /** @type {(s: Stat) => SerialStat} */
 const stat_map_cb = (s) => { return { name: s._name, color: s._color, val: s._val, max: s._max }; };
@@ -42,13 +50,16 @@ const stat_map_w_keys_cb = (s) => { return { key: s._key, name: s._name, color: 
 export class Adventure {
     /**
      * @param {BubbleOwner} owner
-     * @param {SerialAdventure} serial
+     * @param {SerialAdventure|SerialAdventureWKeys} serial
      * @returns {Adventure}
      */
     static from(owner, serial) {
         let new_adventure = new Adventure({ adventure_change: () => { } });
         for (let i = 0; i < serial.player.length; i++) {
             const stat = new_adventure.new_player_stat();
+            if (serial.player[i].key) {
+                stat._key = serial.player[i].key;
+            }
             stat._name = serial.player[i].name;
             stat._color = serial.player[i].color;
             stat._val = serial.player[i].val;
@@ -56,6 +67,9 @@ export class Adventure {
         }
         for (let i = 0; i < serial.enemy_template.length; i++) {
             const stat = new_adventure.new_enemy_stat();
+            if (serial.enemy_template[i].key) {
+                stat._key = serial.enemy_template[i].key;
+            }
             stat._name = serial.enemy_template[i].name;
             stat._color = serial.enemy_template[i].color;
             stat._val = serial.enemy_template[i].val;
@@ -66,6 +80,9 @@ export class Adventure {
             const enemy = [];
             for (let i = 0; i < serial.enemies[j].length; i++) {
                 const stat = new Stat(new_adventure);
+                if (serial.enemies[j][i].key) {
+                    stat._key = serial.enemies[j][i].key;
+                }
                 stat._name = serial.enemies[j][i].name;
                 stat._color = serial.enemies[j][i].color;
                 stat._val = serial.enemies[j][i].val;
@@ -219,6 +236,66 @@ export class Adventure {
         this._owner.adventure_change();
     }
 
+
+    /**
+     * 
+     * @param {Stat[]} list_local 
+     * @param {SerialStatWKey[]} list_new 
+     * @param {"player"|"enemy"|"item"} kind 
+     */
+    compare_in_list(list_local, list_new, kind) {
+        /** @type {AdventureUpdate[]} */
+        const updates = [];
+
+        const new_stat_keys = [];
+        for (const stat of list_new) {
+            new_stat_keys.push(stat.key);
+            let local_stat = this._get_stat(list_local, stat.key)
+            if (local_stat === null) {
+                updates.push({ action: "add", kind, key: stat.key, new_state: stat });
+                local_stat = this._new_stat(list_local);
+            } else {
+                if (
+                    local_stat._name !== stat.name ||
+                    local_stat._color !== stat.color ||
+                    local_stat._val !== stat.val ||
+                    local_stat._max !== stat.max
+                ) {
+                    updates.push({ action: "update", kind, key: stat.key, new_state: stat });
+                }
+            }
+
+            local_stat._key = stat.key;
+            local_stat._name = stat.name;
+            local_stat._color = stat.color;
+            local_stat._val = stat.val;
+            local_stat._max = stat.max;
+        }
+
+        const remove_stat = [];
+        for (const stat of this.player) {
+            if (new_stat_keys.indexOf(stat.key) < 0) {
+                updates.push({ action: "remove", kind, key: stat.key, new_state: null });
+                remove_stat.push(stat.key);
+            }
+        }
+        for (const key of remove_stat) {
+            this._remove_stat(list_local, key);
+        }
+        return updates;
+    }
+
+    /**
+     * @param {SerialAdventureWKeys} new_state 
+     * @returns {AdventureUpdate[]}
+     */
+    compare(new_state) {
+        /** @type {AdventureUpdate[]} */
+        const updates = [];
+        updates.push(...this.compare_in_list(this.player, new_state.player, "player"));
+        return updates;
+    }
+
     /** @returns {SerialAdventureWKeys} */
     to_jobject_w_keys() {
         return {
@@ -239,7 +316,7 @@ export class Adventure {
 
     /** @returns {string} */
     to_json() {
-        JSON.stringify(this.to_jobject());
+        return JSON.stringify(this.to_jobject());
     }
 }
 
