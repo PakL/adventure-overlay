@@ -37,8 +37,9 @@
  * @typedef {Object} AdventureUpdate
  * @property {"add"|"update"|"remove"} action
  * @property {"player"|"enemy"|"item"} kind
+ * @property {number?} index
  * @property {string} key
- * @property {SerialStatWKey} new_state
+ * @property {SerialStatWKey|SerialStatWKey[]} new_state
  */
 
 
@@ -242,8 +243,9 @@ export class Adventure {
      * @param {Stat[]} list_local 
      * @param {SerialStatWKey[]} list_new 
      * @param {"player"|"enemy"|"item"} kind 
+     * @param {number?} index
      */
-    compare_in_list(list_local, list_new, kind) {
+    compare_in_list(list_local, list_new, kind, index) {
         /** @type {AdventureUpdate[]} */
         const updates = [];
 
@@ -252,7 +254,7 @@ export class Adventure {
             new_stat_keys.push(stat.key);
             let local_stat = this._get_stat(list_local, stat.key)
             if (local_stat === null) {
-                updates.push({ action: "add", kind, key: stat.key, new_state: stat });
+                updates.push({ action: "add", kind, index, key: stat.key, new_state: stat });
                 local_stat = this._new_stat(list_local);
             } else {
                 if (
@@ -261,7 +263,7 @@ export class Adventure {
                     local_stat._val !== stat.val ||
                     local_stat._max !== stat.max
                 ) {
-                    updates.push({ action: "update", kind, key: stat.key, new_state: stat });
+                    updates.push({ action: "update", kind, index, key: stat.key, new_state: stat });
                 }
             }
 
@@ -273,9 +275,9 @@ export class Adventure {
         }
 
         const remove_stat = [];
-        for (const stat of this.player) {
+        for (const stat of list_local) {
             if (new_stat_keys.indexOf(stat.key) < 0) {
-                updates.push({ action: "remove", kind, key: stat.key, new_state: null });
+                updates.push({ action: "remove", kind, index, key: stat.key, new_state: null });
                 remove_stat.push(stat.key);
             }
         }
@@ -293,6 +295,18 @@ export class Adventure {
         /** @type {AdventureUpdate[]} */
         const updates = [];
         updates.push(...this.compare_in_list(this.player, new_state.player, "player"));
+        for (let i = 0; i < new_state.enemies.length; i++) {
+            if (this.enemies.length <= i) {
+                this.enemies.push([]);
+            }
+            updates.push(...this.compare_in_list(this.enemies[i], new_state.enemies[i], "enemy", i));
+        }
+        if (this.enemies.length > new_state.enemies.length) {
+            for (let i = new_state.enemies.length; i < this.enemies.length; i++) {
+                updates.push({ action: "remove", kind: "enemy", index: i, key: -1, new_state: null });
+            }
+            this.enemies.splice(new_state.enemies.length, (this.enemies.length - new_state.enemies.length));
+        }
         return updates;
     }
 

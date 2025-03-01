@@ -9,6 +9,12 @@
     --player-bottom-distance: 0px;
     --player-right-distance: 0px;
     --player-width: 60vw;
+    --player-font-size: 1em;
+
+    --enemies-top-distance: 0px;
+    --enemies-right-distance: 0px;
+    --enemies-width: 40vw;
+    --enemies-font-size: 0.9em;
 }
 
 body {
@@ -23,6 +29,22 @@ body {
     display: flex;
     align-items: stretch;
     gap: 0 var(--bar-gap);
+    font-size: var(--player-font-size);
+}
+
+#enemies {
+    position: fixed;
+    top: var(--enemies-top-distance);
+    right: var(--enemies-right-distance);
+    width: var(--enemies-width);
+    font-size: var(--enemies-font-size);
+}
+
+#enemies>.enemy {
+    display: flex;
+    align-items: stretch;
+    gap: 0 var(--bar-gap);
+    margin-bottom: var(--bar-gap);
 }
 
 @property --stat-bar-remain {
@@ -31,7 +53,7 @@ body {
     initial-value: 100%;
 }
 
-#player>.stat {
+.stat {
     position: relative;
     --background-color: #000000;
     --stat-bar-remain: 100%;
@@ -54,15 +76,15 @@ body {
     transition: --stat-bar-remain 0.2s ease-out 0s;
 }
 
-#player>.stat>span {
+.stat>span {
     display: block;
 }
 
-#player>.stat>span.val {
+.stat>span.val {
     font-size: 1.3em;
 }
 
-#player>.stat>.shadow {
+.stat>.shadow {
     position: absolute;
     top: 0;
     left: 0;

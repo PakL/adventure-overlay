@@ -13,12 +13,15 @@ class Receiver {
 
     /** @type {JQuery<HTMLDivElement>} */
     player_stats;
+    /** @type {JQuery<HTMLDivElement>} */
+    enemies_stats;
 
     constructor() {
         this._adventure = Adventure.from(this, { player: [], enemies: [], enemy_template: [] });
         this.connect_to_peer();
 
         this.player_stats = $("#player");
+        this.enemies_stats = $("#enemies");
 
         window.addEventListener("beforeunload", this.on_before_unload.bind(this));
     }
@@ -66,7 +69,8 @@ class Receiver {
      * @param {string} data 
      */
     on_peer_data(data) {
-        for (const update of this._adventure.compare(data)) {
+        const changes = this._adventure.compare(data);
+        for (const update of changes) {
             switch (update.action) {
                 case "add": this.process_add(update); break;
                 case "update": this.process_update(update); break;
@@ -76,21 +80,60 @@ class Receiver {
     }
 
     /**
+     * @param {JQuery<HTMLDivElement>} container 
+     * @param {import("./adventure.mjs").SerialStatWKey} stat 
+     */
+    add_stat(container, stat) {
+        container.append(
+            $("<div />").addClass("stat").attr("data-key", stat.key)
+                .css("--background-color", stat.color)
+                .css("--stat-bar-remain", (stat.max <= 0 ? 100 : Math.round(100 / stat.max * stat.val).toString() + "%"))
+                .append($("<span />").addClass("name").text(stat.name))
+                .append($("<span />").addClass("val").text(stat.val))
+                .append($("<div />").addClass("shadow"))
+        );
+    }
+
+    /**
+     * @param {JQuery<HTMLDivElement>} container 
+     * @param {number} key 
+     * @param {import("./adventure.mjs").SerialStatWKey} new_state 
+     */
+    update_stat(container, key, new_state) {
+        const stat = container.find(".stat[data-key=" + key + "]");
+        stat.find(".name").text(new_state.name)
+        stat.find(".val").text(new_state.val)
+        stat.css("--background-color", new_state.color)
+            .css("--stat-bar-remain", (new_state.max <= 0 ? 100 : Math.round(100 / new_state.max * new_state.val).toString() + "%"))
+    }
+
+    /**
+     * @param {number} index 
+     * @returns {JQuery<HTMLDivElement>}
+     */
+    get_enemy_container(index) {
+        const enemy_containers = this.enemies_stats.find(".enemy");
+        let enemy;
+        if (enemy_containers.length > index) {
+            enemy = $(enemy_containers.get(index));
+        } else {
+            enemy = $("<div />").addClass("enemy");
+            this.enemies_stats.append(enemy);
+        }
+        return enemy;
+    }
+
+    /**
      * @param {import("./adventure.mjs").AdventureUpdate} update 
      */
     process_add(update) {
         switch (update.kind) {
             case "player":
-                this.player_stats.append(
-                    $("<div />").addClass("stat").attr("id", "player-stat-" + update.key)
-                        .css("--background-color", update.new_state.color)
-                        .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
-                        .append($("<span />").addClass("name").text(update.new_state.name))
-                        .append($("<span />").addClass("val").text(update.new_state.val))
-                        .append($("<div />").addClass("shadow"))
-                );
+                this.add_stat(this.player_stats, update.new_state);
                 break;
-            case "enemy": break;
+            case "enemy":
+                this.add_stat(this.get_enemy_container(update.index), update.new_state);
+                break;
             case "item": break;
         }
     }
@@ -101,13 +144,11 @@ class Receiver {
     process_update(update) {
         switch (update.kind) {
             case "player":
-                const stat = $("#player-stat-" + update.key);
-                stat.find(".name").text(update.new_state.name)
-                stat.find(".val").text(update.new_state.val)
-                stat.css("--background-color", update.new_state.color)
-                    .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
+                this.update_stat(this.player_stats, update.key, update.new_state);
                 break;
-            case "enemy": break;
+            case "enemy":
+                this.update_stat(this.get_enemy_container(update.index), update.key, update.new_state);
+                break;
             case "item": break;
         }
     }
@@ -118,9 +159,16 @@ class Receiver {
     process_remove(update) {
         switch (update.kind) {
             case "player":
-                $("#player-stat-" + update.key).remove();
+                this.player_stats.find(".stat[data-key=" + update.key + "]").remove();
                 break;
-            case "enemy": break;
+            case "enemy":
+                const enemy_container = this.get_enemy_container(update.index);
+                if (update.key < 0) {
+                    enemy_container.remove();
+                } else {
+                    enemy_container.find(".stat[data-key=" + update.key + "]").remove();
+                }
+                break;
             case "item": break;
         }
     }
