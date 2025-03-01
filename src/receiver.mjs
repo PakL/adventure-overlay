@@ -70,6 +70,7 @@ class Receiver {
             switch (update.action) {
                 case "add": this.process_add(update); break;
                 case "update": this.process_update(update); break;
+                case "remove": this.process_remove(update); break;
             }
         }
     }
@@ -81,9 +82,11 @@ class Receiver {
         switch (update.kind) {
             case "player":
                 this.player_stats.append(
-                    $("<div />").addClass("stat").attr("id", "player-stat-" + update.new_state.key).text(update.new_state.name)
+                    $("<div />").addClass("stat").attr("id", "player-stat-" + update.key)
                         .css("--background-color", update.new_state.color)
                         .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
+                        .append($("<span />").addClass("name").text(update.new_state.name))
+                        .append($("<span />").addClass("val").text(update.new_state.val))
                         .append($("<div />").addClass("shadow"))
                 );
                 break;
@@ -98,9 +101,24 @@ class Receiver {
     process_update(update) {
         switch (update.kind) {
             case "player":
-                $("#player-stat-" + update.new_state.key)
-                    .css("--background-color", update.new_state.color)
+                const stat = $("#player-stat-" + update.key);
+                stat.find(".name").text(update.new_state.name)
+                stat.find(".val").text(update.new_state.val)
+                stat.css("--background-color", update.new_state.color)
                     .css("--stat-bar-remain", (update.new_state.max <= 0 ? 100 : Math.round(100 / update.new_state.max * update.new_state.val).toString() + "%"))
+                break;
+            case "enemy": break;
+            case "item": break;
+        }
+    }
+
+    /**
+     * @param {import("./adventure.mjs").AdventureUpdate} update 
+     */
+    process_remove(update) {
+        switch (update.kind) {
+            case "player":
+                $("#player-stat-" + update.key).remove();
                 break;
             case "enemy": break;
             case "item": break;

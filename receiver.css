@@ -1,15 +1,28 @@
+:root {
+    --bar-border-with: 5px;
+    --bar-border-color: #555;
+    --bar-border-radius: 30px;
+    --bar-padding-vertical: 20px;
+    --bar-padding-horizontal: 30px;
+    --bar-gap: 10px;
+
+    --player-bottom-distance: 0px;
+    --player-right-distance: 0px;
+    --player-width: 60vw;
+}
+
 body {
     font-family: system-ui;
 }
 
 #player {
     position: fixed;
-    bottom: 0px;
-    right: 0px;
-    width: 60vw;
+    bottom: var(--player-bottom-distance);
+    right: var(--player-right-distance);
+    width: var(--player-width);
     display: flex;
     align-items: stretch;
-    gap: 0 10px;
+    gap: 0 var(--bar-gap);
 }
 
 @property --stat-bar-remain {
@@ -25,9 +38,9 @@ body {
 
     font-weight: 700;
     flex-grow: 1;
-    padding: 20px 30px;
-    border: 5px solid #555555;
-    border-radius: 30px;
+    padding: var(--bar-padding-vertical) var(--bar-padding-horizontal);
+    border: var(--bar-border-with) solid var(--bar-border-color);
+    border-radius: var(--bar-border-radius);
     text-align: center;
     color: #ffffff;
     text-shadow: 0 0 3px #000;
@@ -41,13 +54,21 @@ body {
     transition: --stat-bar-remain 0.2s ease-out 0s;
 }
 
+#player>.stat>span {
+    display: block;
+}
+
+#player>.stat>span.val {
+    font-size: 1.3em;
+}
+
 #player>.stat>.shadow {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    border-radius: 25px;
+    border-radius: calc(var(--bar-border-radius) - var(--bar-border-with));
     background: linear-gradient(180deg,
             rgba(255, 255, 255, 0.2) 0%,
             transparent 100%);
