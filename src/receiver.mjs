@@ -15,6 +15,8 @@ class Receiver {
     player_stats;
     /** @type {JQuery<HTMLDivElement>} */
     enemies_stats;
+    /** @type {JQuery<HTMLDivElement>} */
+    items_list;
 
     constructor() {
         this._adventure = Adventure.from(this, { player: [], enemies: [], enemy_template: [] });
@@ -22,6 +24,7 @@ class Receiver {
 
         this.player_stats = $("#player");
         this.enemies_stats = $("#enemies");
+        this.items_list = $("#items");
 
         window.addEventListener("beforeunload", this.on_before_unload.bind(this));
     }
@@ -134,7 +137,9 @@ class Receiver {
             case "enemy":
                 this.add_stat(this.get_enemy_container(update.index), update.new_state);
                 break;
-            case "item": break;
+            case "item":
+                this.items_list.append($("<div />").text(update.new_state.val));
+                break;
         }
     }
 
@@ -149,7 +154,9 @@ class Receiver {
             case "enemy":
                 this.update_stat(this.get_enemy_container(update.index), update.key, update.new_state);
                 break;
-            case "item": break;
+            case "item":
+                this.items_list.find("div:nth-child(" + (update.index + 1) + ")").text(update.new_state.val);
+                break;
         }
     }
 
@@ -169,7 +176,9 @@ class Receiver {
                     enemy_container.find(".stat[data-key=" + update.key + "]").remove();
                 }
                 break;
-            case "item": break;
+            case "item":
+                this.items_list.find("div:nth-child(" + (update.index + 1) + ")").remove();
+                break;
         }
     }
 

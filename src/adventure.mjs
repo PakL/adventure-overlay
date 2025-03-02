@@ -8,12 +8,14 @@
  * @property {SerialStat[]} player
  * @property {SerialStat[]} enemy_template
  * @property {SerialStat[][]} enemies
+ * @property {string[]} items
  */
 /**
  * @typedef {Object} SerialAdventureWKeys
  * @property {SerialStatWKey[]} player
  * @property {SerialStatWKey[]} enemy_template
  * @property {SerialStatWKey[][]} enemies
+ * @property {string[]} items
  */
 
 /**
@@ -91,6 +93,10 @@ export class Adventure {
                 enemy.push(stat);
             }
             new_adventure.enemies.push(enemy);
+        }
+
+        if (serial.items) {
+            new_adventure.items = serial.items;
         }
 
         new_adventure._owner = owner;
@@ -295,6 +301,8 @@ export class Adventure {
         /** @type {AdventureUpdate[]} */
         const updates = [];
         updates.push(...this.compare_in_list(this.player, new_state.player, "player"));
+
+
         for (let i = 0; i < new_state.enemies.length; i++) {
             if (this.enemies.length <= i) {
                 this.enemies.push([]);
@@ -307,6 +315,23 @@ export class Adventure {
             }
             this.enemies.splice(new_state.enemies.length, (this.enemies.length - new_state.enemies.length));
         }
+
+        for (let i = 0; i < new_state.items.length; i++) {
+            if (this.items.length <= i) {
+                this.items.push(new_state.items[i]);
+                updates.push({ action: "add", kind: "item", index: i, key: null, new_state: { val: new_state.items[i] } });
+            } else {
+                this.items[i] = new_state.items[i];
+                updates.push({ action: "update", kind: "item", index: i, key: null, new_state: { val: new_state.items[i] } });
+            }
+        }
+        if (this.items.length > new_state.items.length) {
+            for (let i = new_state.items.length; i < this.items.length; i++) {
+                updates.push({ action: "remove", kind: "item", index: i, key: null, new_state: null });
+            }
+            this.items.splice(new_state.items.length, (this.items.length - new_state.items.length));
+        }
+
         return updates;
     }
 
@@ -315,7 +340,8 @@ export class Adventure {
         return {
             player: this.player.map(stat_map_w_keys_cb),
             enemy_template: this.enemy_template.map(stat_map_w_keys_cb),
-            enemies: this.enemies.map((enemy) => enemy.map(stat_map_w_keys_cb))
+            enemies: this.enemies.map((enemy) => enemy.map(stat_map_w_keys_cb)),
+            items: this.items.map((v) => v)
         };
     }
 
@@ -324,7 +350,8 @@ export class Adventure {
         return {
             player: this.player.map(stat_map_cb),
             enemy_template: this.enemy_template.map(stat_map_cb),
-            enemies: this.enemies.map((enemy) => enemy.map(stat_map_cb))
+            enemies: this.enemies.map((enemy) => enemy.map(stat_map_cb)),
+            items: this.items.map((v) => v)
         };
     }
 

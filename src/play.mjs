@@ -18,8 +18,13 @@ export class PlayPage {
     player_stats_list;
     /** @type {JQuery<HTMLDivElement>} */
     enemies_list;
+    /** @type {JQuery<HTMLDivElement>} */
+    inventory_list;
+
     /** @type {JQuery<HTMLButtonElement>} */
     add_enemy_btn;
+    /** @type {JQuery<HTMLButtonElement>} */
+    add_item_btn;
 
 
     /**
@@ -32,9 +37,12 @@ export class PlayPage {
 
         this.player_stats_list = $('#play-player-attributes');
         this.enemies_list = $("#enemies");
+        this.inventory_list = $("#play-inventory");
         this.add_enemy_btn = $("#play-enemy-add");
+        this.add_item_btn = $("#play-item-add");
 
         this.add_enemy_btn.on("click", this.add_enemy.bind(this));
+        this.add_item_btn.on("click", this.add_item.bind(this));
     }
 
     open() {
@@ -45,6 +53,10 @@ export class PlayPage {
 
         this.build_player_stats();
         this.build_enemy_stats();
+
+        for (const item of this._app.adventure.items) {
+            this.add_item(item);
+        }
     }
 
     close() {
@@ -103,6 +115,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ClickEvent} event 
+     */
     reduce_player_stat(event) {
         const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
@@ -112,6 +127,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ChangeEvent} event 
+     */
     change_player_stat(event) {
         const { target, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
@@ -121,6 +139,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ClickEvent} event 
+     */
     increase_player_stat(event) {
         const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.get_player_stat(stat_key);
@@ -163,6 +184,7 @@ export class PlayPage {
         this.enemies_list.append(enemy_card);
     }
 
+
     build_enemy_stats() {
         this.enemies_list.html('');
         for (const enemy of this._app.adventure.enemies) {
@@ -171,7 +193,6 @@ export class PlayPage {
     }
 
     /**
-     * 
      * @param {JQuery.ClickEvent} event 
      */
     remove_enemy(event) {
@@ -185,6 +206,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ClickEvent} event 
+     */
     reduce_enemy_stat(event) {
         const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.find_stat_in_enemies(stat_key);
@@ -194,6 +218,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ChangeEvent} event 
+     */
     change_enemy_stat(event) {
         const { target, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.find_stat_in_enemies(stat_key);
@@ -203,6 +230,9 @@ export class PlayPage {
         }
     }
 
+    /**
+     * @param {JQuery.ClickEvent} event 
+     */
     increase_enemy_stat(event) {
         const { stat_row, stat_key } = get_stat_elements_from_event(event);
         const stat = this._app.adventure.find_stat_in_enemies(stat_key);
@@ -210,5 +240,58 @@ export class PlayPage {
             stat.val = stat.val + 1;
             stat_row.find("input").val(stat.val.toString());
         }
+    }
+
+    /**
+     * @param {string} val 
+     */
+    add_item(val) {
+        if (typeof (val) !== "string") {
+            val = "";
+            this._app.adventure.items.push("");
+            this._app.adventure.adventure_change();
+        }
+
+        this.inventory_list.append(
+            $("<div />").addClass("input-group").addClass("mb-2")
+                .append($("<input />")
+                    .attr("type", "text").val(val)
+                    .addClass("form-control")
+                    .on("input", this.item_name_change.bind(this))
+                )
+                .append($("<button />")
+                    .attr("type", "button").text("❌")
+                    .addClass("btn").addClass("btn-outline-danger")
+                    .on("click", this.item_remove.bind(this))
+                )
+        )
+    }
+
+    /**
+     * @param {JQuery<HTMLDivElement>} target
+     */
+    get_item_index(target) {
+        return this.inventory_list.find(".input-group").index(target);
+    }
+
+    /**
+     * @param {JQuery.ChangeEvent} event 
+     */
+    item_name_change(event) {
+        const target = $(event.delegateTarget);
+        const index = this.get_item_index(target.parent());
+        this._app.adventure.items[index] = target.val();
+        this._app.adventure.adventure_change();
+    }
+
+    /**
+     * @param {JQuery.ClickEvent} event 
+     */
+    item_remove(event) {
+        const target = $(event.delegateTarget).parent();
+        const index = this.get_item_index(target);
+        this._app.adventure.items.splice(index, 1);
+        this._app.adventure.adventure_change();
+        target.remove();
     }
 }

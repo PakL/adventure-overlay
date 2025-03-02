@@ -15,6 +15,12 @@
     --enemies-right-distance: 0px;
     --enemies-width: 40vw;
     --enemies-font-size: 0.9em;
+
+    --items-top-distance: 60vh;
+    --items-left-distance: 0px;
+    --items-font-size: 1.3em;
+    --items-font-color: #000;
+    --items-gap: 5px;
 }
 
 body {
@@ -45,6 +51,18 @@ body {
     align-items: stretch;
     gap: 0 var(--bar-gap);
     margin-bottom: var(--bar-gap);
+}
+
+#items {
+    position: fixed;
+    top: var(--items-top-distance);
+    left: var(--items-left-distance);
+    font-size: var(--items-font-size);
+    color: var(--items-font-color);
+}
+
+#items>div {
+    margin-bottom: var(--items-gap);
 }
 
 @property --stat-bar-remain {
