@@ -5,6 +5,10 @@ import { Adventure } from "./adventure.mjs";
 import { PlayPage } from "./play.mjs";
 import { SetupPage } from "./setup.mjs";
 
+let peer_options = {};
+if (document.location.hostname === "localhost" || document.location.hostname.startsWith("127.0.0.")) {
+    peer_options = { host: "localhost", port: 9000 };
+}
 
 let saving_timeout = null;
 /**
@@ -88,7 +92,7 @@ export class App {
             localStorage.setItem("connection_uuid", connection_uuid);
         }
 
-        this.peer = new Peer("pakl-dev-" + connection_uuid, { host: "localhost", port: 9000 });
+        this.peer = new Peer("pakl-dev-" + connection_uuid, peer_options);
         this.peer.on("open", this.on_peer_open.bind(this));
         this.peer.on("error", this.on_peer_error.bind(this));
         this.peer.on("connection", this.on_new_peer_connection.bind(this));
@@ -102,11 +106,19 @@ export class App {
     }
 
     /**
-     * @param {string} _id 
+     * @param {string} id 
      */
-    on_peer_open(_id) {
-        //TODO: check if it's mine or if the server gave me a different one
-        this.connection_status.text("Connection open. Waiting for clients");
+    on_peer_open(id) {
+        let connection_uuid = localStorage.getItem("connection_uuid");
+        if (id === "pakl-dev-" + connection_uuid) {
+            const num = connection_uuid.replace(/-/g, "").match(/.{1,2}/g).map((byte) => parseInt(byte, 16));
+            const urlcode = btoa(String.fromCharCode.apply(null, num));
+            $("#receiver_url").html("Copy this URL as a browser source in OBS: <code>" + document.location.protocol + "//" + document.location.host + document.location.pathname.replace(/\/index.html$/i, "/") + "receiver.html?" + encodeURIComponent(urlcode) + "</code>");
+            this.connection_status.text("Connection open. Waiting for clients");
+        } else {
+            this.connection_status.text("Invalid connection. Reload page to try again.");
+            localStorage.removeItem("connection_uuid");
+        }
     }
 
     on_peer_error() {

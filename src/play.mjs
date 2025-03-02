@@ -54,6 +54,7 @@ export class PlayPage {
         this.build_player_stats();
         this.build_enemy_stats();
 
+        this.inventory_list.html('');
         for (const item of this._app.adventure.items) {
             this.add_item(item);
         }

@@ -3,6 +3,12 @@ import $ from "jquery"
 
 import { Adventure } from "./adventure.mjs";
 
+let peer_options = {};
+if (document.location.hostname === "localhost" || document.location.hostname.startsWith("127.0.0.")) {
+    peer_options = { host: "localhost", port: 9000 };
+}
+let _connection_uuid = null;
+
 class Receiver {
     /** @type {Adventure} */
     _adventure;
@@ -20,7 +26,22 @@ class Receiver {
 
     constructor() {
         this._adventure = Adventure.from(this, { player: [], enemies: [], enemy_template: [] });
-        this.connect_to_peer();
+
+        if (document.location.search.length > 1) {
+            const uuid_bare = atob(decodeURIComponent(document.location.search.substring(1))).split("").map(function (c) { return c.charCodeAt(0).toString(16).padStart(2, "0"); }).join("");
+            if (uuid_bare.length === 32) {
+                _connection_uuid = uuid_bare.substring(0, 8) +
+                    "-" + uuid_bare.substring(8, 12) +
+                    "-" + uuid_bare.substring(12, 16) +
+                    "-" + uuid_bare.substring(16, 20) +
+                    "-" + uuid_bare.substring(20);
+                this.connect_to_peer();
+            }
+        }
+
+        if (_connection_uuid === null) {
+            $("body").append($("<strong />").text("Invalid connection code"));
+        }
 
         this.player_stats = $("#player");
         this.enemies_stats = $("#enemies");
@@ -36,14 +57,14 @@ class Receiver {
     }
 
     connect_to_peer() {
-        this.peer = new Peer({ host: "localhost", port: 9000 });
+        this.peer = new Peer(peer_options);
         this.peer.on("open", this.on_peer_open.bind(this));
         this.peer.on("error", this.on_peer_error.bind(this));
         this.peer.on("close", this.on_peer_close.bind(this));
     }
 
     on_peer_open() {
-        this.connection = this.peer.connect("pakl-dev-cbf1af10-08f1-4889-9fbb-dcacd175a2e0");
+        this.connection = this.peer.connect("pakl-dev-" + _connection_uuid);
         this.connection.on("open", this.on_peer_connection.bind(this));
         this.connection.on("close", this.on_peer_connection_close.bind(this));
         this.connection.on("data", this.on_peer_data.bind(this));
