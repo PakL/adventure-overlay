@@ -4,6 +4,7 @@ import $ from "jquery"
 import { Adventure } from "./adventure.mjs";
 import { PlayPage } from "./play.mjs";
 import { SetupPage } from "./setup.mjs";
+import { HelpPage } from "./help.mjs";
 
 let peer_options = {};
 if (document.location.hostname === "localhost" || document.location.hostname.startsWith("127.0.0.")) {
@@ -32,6 +33,8 @@ export class App {
     play;
     /** @type {SetupPage} */
     setup;
+    /** @type {HelpPage} */
+    help;
 
     /** @type {Adventure} */
     adventure;
@@ -51,9 +54,11 @@ export class App {
         this.load_adventure();
         this.play = new PlayPage(this);
         this.setup = new SetupPage(this);
+        this.help = new HelpPage(this);
 
         this.play.nav.on("click", this.open_play_page.bind(this));
         this.setup.nav.on("click", this.open_setup_page.bind(this));
+        this.help.nav.on("click", this.open_help_page.bind(this));
 
         this.play.open();
 
@@ -73,12 +78,20 @@ export class App {
 
     open_play_page() {
         this.setup.close();
+        this.help.close();
         this.play.open();
     }
 
     open_setup_page() {
         this.play.close();
+        this.help.close();
         this.setup.open();
+    }
+
+    open_help_page() {
+        this.play.close();
+        this.setup.close();
+        this.help.open();
     }
 
     adventure_change() {

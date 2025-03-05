@@ -21,8 +21,9 @@
         <div class="alert alert-secondary" id="connection_status">Starting server connection</div>
 
         <ul class="nav nav-tabs">
-            <li class="nav-item"><a id="nav-play" class="nav-link active">Play</a></li>
+            <li class="nav-item"><a id="nav-play" class="nav-link">Play</a></li>
             <li class="nav-item"><a id="nav-setup" class="nav-link">Setup</a></li>
+            <li class="nav-item"><a id="nav-help" class="nav-link">Help</a></li>
         </ul>
 
         <div class="d-none py-4" id="page-play">
@@ -89,8 +90,213 @@
                 </div>
             </div>
         </div>
+        <div class="d-none py-4" id="page-help">
+            <h2>How it all works</h2>
+            <p>
+                To avoid me having to host a server somewhere or the user to install any additional software I decided
+                to go with a peer-to-peer (P2P) solution. That means your browser is going to play server and the OBS
+                browser source is going to connect directly to it. There is a broker server that is required to broker
+                the connection between the clients just because browsers can't just open themselves to connections.
+                Which is a good thing, everything else would open your system to all kinds of attacks. However that
+                broker server only exchanges a client id and information that are required to establish a connection
+                between the peers. The library I use (PeerJS) provides a free to use broker server, so I also don't
+                have to host anything myself here.
+            </p>
+            <p>
+                If your browser is ready to receive a connection the status box at the top should say <code>Connection
+                open. Waiting for clients</code> or <code>X clients connected</code>. If it gets stuck at
+                <code>Starting server connection</code> you may have another browser tab with this application open.
+                To make sure you don't have to change the browser source URL every time you use this application your
+                connection ID is saved in the browser. For now you can only have one connection ID per browser
+                (-profile).
+            </p>
+            <h2>Setting up OBS</h2>
+            <p>
+                When your browser is ready to receive connections you'll get a URL in the Setup tab that you can use for
+                a browser source in OBS.
+            </p>
+            <ol>
+                <li>Begin by selecting and copying the URL</li>
+                <li>In OBS select the scene you want to add the overlay to</li>
+                <li>In Sources click on the plus at the bottom</li>
+                <li>Select "Browser" in and name the source and click OK</li>
+                <li>A new dialog opens with the browser source properties. Paste the copied URL in the URL input</li>
+                <li>I recommend setting the width and height to the width and height of your canvas</li>
+                <li>To have smooth animations you should set the FPS to your output FPS</li>
+                <li>Click OK when you're done</li>
+            </ol>
+            <h2>Customizing the overlay</h2>
+            <p>
+                You will probably notice that the bars are at the very edge of the screen and would like to change that.
+                You're in luck, because I added some easy to use CSS variables that you can change via the custom CSS
+                in your OBS source properties.
+            </p>
+            <p>
+                By default OBS adds <code>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow:
+                hidden; }</code> as your default custom CSS, and you should totally keep that as it makes the overlay
+                transparent and remove accidental scroll bars. But inside the curly brakets, right after <code>overflow:
+                hidden;</code> we can just our own settings. You could change to font (for example) to any font
+                installed on your system like this: <code>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto;
+                overflow: hidden; <strong>font-family: "Comic Sans";</strong> }</code>.
+            </p>
+            <p>
+                The player attributes are anchored to the bottom right, the enemies to the top right and the inventory
+                to the top left.
+            </p>
+            <p>And here's a list of variables I prepared especially for this overlay:</p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Default value</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                    <tr>
+                        <td><code>--bar-border-with</code></td>
+                        <td>5px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Width of all attribute bars</td>
+                    </tr>
+                    <tr>
+                        <td><code>--bar-border-color</code></td>
+                        <td>#555</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value"
+                                target="_blank">&lt;color&gt;</a></td>
+                        <td>Color of the border of all attribute bars</td>
+                    </tr>
+                    <tr>
+                        <td><code>--bar-border-radius</code></td>
+                        <td>30px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Radius of the attribute bars' corners</td>
+                    </tr>
+                    <tr>
+                        <td><code>--bar-padding-vertical</code></td>
+                        <td>20px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Vertical (top & bottom) padding of the attribute bars</td>
+                    </tr>
+                    <tr>
+                        <td><code>--bar-padding-horizontal</code></td>
+                        <td>30px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Horizontal (left & right) padding of the attribute bars</td>
+                    </tr>
+                    <tr>
+                        <td><code>--bar-gap</code></td>
+                        <td>10px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Gap between the attribute bars</td>
+                    </tr>
+                </tbody>
+                <tbody class="table-group-divider">
+                    <tr>
+                        <td><code>--player-bottom-distance</code></td>
+                        <td>0px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the player bars from the bottom edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--player-right-distance</code></td>
+                        <td>0px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the player bars from the right edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--player-width</code></td>
+                        <td>60vw</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>The width all player bars combined can occupy on screen</td>
+                    </tr>
+                    <tr>
+                        <td><code>--player-font-size</code></td>
+                        <td>1em</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Text size of the player attributes</td>
+                    </tr>
+                </tbody>
+                <tbody class="table-group-divider">
+                    <tr>
+                        <td><code>--enemies-top-distance</code></td>
+                        <td>0px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the enemy bars from the top edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--enemies-right-distance</code></td>
+                        <td>0px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the enemy bars from the right edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--enemies-width</code></td>
+                        <td>40vw</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>The width all enemy bars combined can occupy on screen</td>
+                    </tr>
+                    <tr>
+                        <td><code>--enemies-font-size</code></td>
+                        <td>0.9em</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Text size of the enemy attributes</td>
+                    </tr>
+                </tbody>
+                <tbody class="table-group-divider">
+                    <tr>
+                        <td><code>--items-top-distance</code></td>
+                        <td>60vh</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the inventory from the top edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--items-left-distance</code></td>
+                        <td>0px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Distance of the inventory from the left edge</td>
+                    </tr>
+                    <tr>
+                        <td><code>--items-font-size</code></td>
+                        <td>1.3em</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Text size of the inventory</td>
+                    </tr>
+                    <tr>
+                        <td><code>--items-font-color</code></td>
+                        <td>#000</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/color_value"
+                                target="_blank">&lt;color&gt;</a></td>
+                        <td>Text color of the inventory</td>
+                    </tr>
+                    <tr>
+                        <td><code>--items-gap</code></td>
+                        <td>5px</td>
+                        <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
+                                target="_blank">&lt;length&gt;</a></td>
+                        <td>Gap between items in inventory</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
