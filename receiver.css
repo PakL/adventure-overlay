@@ -1,5 +1,6 @@
 :root {
-    --bar-border-with: 5px;
+    --bar-border-width: 5px;
+    --bar-border-with: var(--bar-border-width);
     --bar-border-color: #555;
     --bar-border-radius: 30px;
     --bar-padding-vertical: 20px;

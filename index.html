@@ -93,14 +93,14 @@
         <div class="d-none py-4" id="page-help">
             <h2>How it all works</h2>
             <p>
-                To avoid me having to host a server somewhere or the user to install any additional software I decided
-                to go with a peer-to-peer (P2P) solution. That means your browser is going to play server and the OBS
-                browser source is going to connect directly to it. There is a broker server that is required to broker
-                the connection between the clients just because browsers can't just open themselves to connections.
-                Which is a good thing, everything else would open your system to all kinds of attacks. However that
-                broker server only exchanges a client id and information that are required to establish a connection
-                between the peers. The library I use (PeerJS) provides a free to use broker server, so I also don't
-                have to host anything myself here.
+                To avoid me having to host a server somewhere or the user having to install any additional software I
+                decided to go with a peer-to-peer (P2P) solution. That means your browser is going to play server and
+                the OBS browser source is going to connect directly to it. There is a broker server that is required to
+                broker the connection between the clients just because browsers can't just open themselves to
+                connections. Which is a good thing, everything else would open your system to all kinds of attacks.
+                However, that broker server only exchanges a client id and information that are required to establish a
+                connection between the peers. The library I use (PeerJS) provides a free to use broker server, so I also
+                don't have to host anything myself here.
             </p>
             <p>
                 If your browser is ready to receive a connection the status box at the top should say <code>Connection
@@ -119,7 +119,7 @@
                 <li>Begin by selecting and copying the URL</li>
                 <li>In OBS select the scene you want to add the overlay to</li>
                 <li>In Sources click on the plus at the bottom</li>
-                <li>Select "Browser" in and name the source and click OK</li>
+                <li>Select "Browser" and name the source and click OK</li>
                 <li>A new dialog opens with the browser source properties. Paste the copied URL in the URL input</li>
                 <li>I recommend setting the width and height to the width and height of your canvas</li>
                 <li>To have smooth animations you should set the FPS to your output FPS</li>
@@ -133,9 +133,9 @@
             </p>
             <p>
                 By default OBS adds <code>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow:
-                hidden; }</code> as your default custom CSS, and you should totally keep that as it makes the overlay
+                hidden; }</code> as your custom CSS, and you should totally keep that as it makes the overlay
                 transparent and remove accidental scroll bars. But inside the curly brakets, right after <code>overflow:
-                hidden;</code> we can just our own settings. You could change to font (for example) to any font
+                hidden;</code> we can just our own settings. You could change the font (for example) to any font
                 installed on your system like this: <code>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto;
                 overflow: hidden; <strong>font-family: "Comic Sans";</strong> }</code>.
             </p>
@@ -155,11 +155,11 @@
                 </thead>
                 <tbody class="table-group-divider">
                     <tr>
-                        <td><code>--bar-border-with</code></td>
+                        <td><code>--bar-border-width</code></td>
                         <td>5px</td>
                         <td><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/length"
                                 target="_blank">&lt;length&gt;</a></td>
-                        <td>Width of all attribute bars</td>
+                        <td>Width of the border of all attribute bars</td>
                     </tr>
                     <tr>
                         <td><code>--bar-border-color</code></td>
